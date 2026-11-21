@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — MovieHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#000;--bg-elev-1:#0a0a0a;--bg-elev-2:#121212;--bg-elev-3:#1a1a1a;
+  --surface:#1C1C1E;--border:rgba(255,255,255,.08);--border-strong:rgba(255,255,255,.15);
+  --text:#f5f5f5;--text-soft:#a3a3a3;--text-mute:#6b6b6b;
+  --accent:#8b5cf6;--accent-2:#6366f1;--danger:#ef4444;--success:#22c55e;--warning:#f59e0b;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit;font-size:14px;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg-elev-2);color:var(--text);width:100%;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,92,246,.15)}
+textarea{resize:vertical;min-height:90px;line-height:1.6}
+select option{background:#1e293b;color:#e2e8f0}
+.container{max-width:1280px;margin:0 auto;padding:0 24px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:10px;font-size:14px;font-weight:600;transition:all .2s;white-space:nowrap;letter-spacing:-.01em}
+.btn-primary{background:#fff;color:#000}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,255,255,.2)}
+.btn-accent{background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;box-shadow:0 4px 16px rgba(139,92,246,.35)}
+.btn-accent:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(139,92,246,.5)}
+.btn-ghost{background:rgba(255,255,255,.04);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{background:rgba(255,255,255,.08);border-color:var(--border-strong)}
+.btn-danger{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.btn-danger:hover{background:rgba(239,68,68,.2)}
+.btn-sm{padding:7px 14px;font-size:13px;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+.admin-header{padding:24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;background:rgba(10,10,10,.8);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+.admin-header h1{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.admin-header p{font-size:13px;color:var(--text-soft);margin-top:2px}
+.admin-tabs{display:flex;gap:4px;padding:0 24px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;background:rgba(10,10,10,.5)}
+.admin-tabs::-webkit-scrollbar{display:none}
+.admin-tab{padding:16px 20px;font-size:14px;font-weight:600;color:var(--text-soft);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .15s}
+.admin-tab:hover{color:var(--text)}
+.admin-tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.admin-content{padding:32px 24px}
+.card{background:var(--bg-elev-1);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px}
+.card h3{font-size:18px;font-weight:700;margin-bottom:20px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-soft)}
+.checkbox-label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text)}
+.checkbox-label input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px}
+.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.1);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:60px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:80px 24px;color:var(--text-mute)}
+.empty h3{font-size:18px;color:var(--text);margin-bottom:8px}
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(140%);background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:600;z-index:10000;opacity:0;transition:all .35s;box-shadow:0 16px 48px rgba(139,92,246,.5);max-width:90vw;text-align:center;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.error{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.list-item{display:flex;align-items:center;gap:16px;padding:14px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--bg-elev-2);transition:border-color .15s}
+.list-item:hover{border-color:var(--border-strong)}
+.list-item img{width:56px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#222}
+.list-item .info{flex:1;min-width:0}
+.list-item .info h4{font-size:14px;font-weight:600;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-item .info p{font-size:12px;color:var(--text-mute)}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:32px}
+.stat-card{padding:20px;background:var(--bg-elev-2);border:1px solid var(--border);border-radius:12px}
+.stat-card .label{font-size:12px;color:var(--text-mute);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px}
+.stat-card .value{font-size:28px;font-weight:800;background:linear-gradient(135deg,#c4b5fd,#818cf8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.upload-status{font-size:12px;color:var(--accent);margin-top:6px;font-weight:500}
+.bulk-image-drop{border:2px dashed rgba(139,92,246,.4);border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(139,92,246,.05)}
+.bulk-image-drop:hover{background:rgba(139,92,246,.1);border-color:var(--accent)}
+.bulk-image-drop p{font-size:14px;color:var(--text-soft);margin-top:8px}
+@media(max-width:640px){.form-row{grid-template-columns:1fr}.admin-content{padding:20px 16px}.card{padding:20px}}
+</style>
+</head>
+<body>
+
+<header class="admin-header">
+  <div>
+    <h1>Admin Dashboard</h1>
+    <p id="user-email">Checking...</p>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="index.html" class="btn btn-ghost btn-sm">View Site</a>
+    <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<nav class="admin-tabs" id="tabs">
+  <button class="admin-tab active" data-tab="dashboard">Dashboard</button>
+  <button class="admin-tab" data-tab="import">Bulk Import</button>
+  <button class="admin-tab" data-tab="movies">Movies</button>
+  <button class="admin-tab" data-tab="ads">Ads (Adsterra)</button>
+  <button class="admin-tab" data-tab="settings">Settings</button>
+  <button class="admin-tab" data-tab="logs">Activity Logs</button>
+</nav>
+
+<main class="admin-content" id="admin-content">
+  <div class="spinner"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================
+// CONFIG
+// ============================================
+const SUPABASE_URL = 'https://jshdjibwwtzdbbeevhqh.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_O-g_KLwUhimCSvUleXfzfA_ZpG8OyBd';
+const ADMIN_EMAIL = 'sahil.hussain.div@gmail.com'; 
+
+const state = {
+  session: null,
+  user: null,
+  movies: [],
+  ads: [],
+  currentTab: 'dashboard'
+};
+
+// ============================================
+// SUPABASE HELPERS
+// ============================================
+function sbHeaders(extra = {}) {
+  return {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + ((state.session && state.session.access_token) || SUPABASE_KEY),
+    'Content-Type': 'application/json',
+    ...extra
+  };
+}
+
+async function sbFetch(path, options = {}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    method: options.method || 'GET',
+    headers: sbHeaders(options.headers),
+    body: options.body
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error('Supabase ' + res.status + ': ' + err.slice(0, 150));
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function sbLogin(email, password) {
+  const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error_description || data.msg || 'Login failed');
+  state.session = data;
+  state.user = data.user;
+  localStorage.setItem('pk_session', JSON.stringify(data));
+  return data;
+}
+
+function sbLogout() {
+  state.session = null;
+  state.user = null;
+  localStorage.removeItem('pk_session');
+}
+
+function restoreSession() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('pk_session') || 'null');
+    if (saved && saved.expires_at && saved.expires_at * 1000 > Date.now()) {
+      state.session = saved;
+      state.user = saved.user;
+    }
+  } catch (e) {}
+}
+
+async function sbUpload(file, folder = 'posters') {
+  const ext = file.name.split('.').pop();
+  const path = folder + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 9) + '.' + ext;
+  const res = await fetch(SUPABASE_URL + '/storage/v1/object/movie-assets/' + path, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + ((state.session && state.session.access_token) || SUPABASE_KEY),
+      'Content-Type': file.type,
+      'x-upsert': 'false'
+    },
+    body: file
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error('Upload failed: ' + err);
+  }
+  return SUPABASE_URL + '/storage/v1/object/public/movie-assets/' + path;
+}
+
+// ============================================
+// HELPERS
+// ============================================
+function toast(msg, duration = 2400) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), duration);
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => {
+    if (c === '&') return '&amp;';
+    if (c === '<') return '&lt;';
+    if (c === '>') return '&gt;';
+    if (c === '"') return '&quot;';
+    return '&#39;';
+  });
+}
+
+function slugify(str) {
+  return String(str || '').toLowerCase().trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+// ============================================
+// BOOT
+// ============================================
+document.addEventListener('DOMContentLoaded', async () => {
+  restoreSession();
+  
+  if (!state.user) {
+    renderLogin();
+    return;
+  }
+  
+  try {
+    const profiles = await sbFetch('user_profiles?id=eq.' + state.user.id + '&select=role,email');
+    const isAdmin = profiles && profiles[0] && profiles[0].role === 'admin';
+    
+    if (!isAdmin) {
+      document.getElementById('admin-content').innerHTML = `
+        <div class="empty">
+          <h3>Access Denied</h3>
+          <p>This account is not an authorized admin.</p>
+          <button class="btn btn-ghost" onclick="logout()" style="margin-top:16px">Logout</button>
+        </div>`;
+      return;
+    }
+  } catch (e) {
+    console.warn('Profile check failed:', e);
+  }
+  
+  document.getElementById('user-email').textContent = 'Signed in as ' + state.user.email;
+  initTabs();
+  renderTab('dashboard');
+});
+
+function renderLogin() {
+  document.getElementById('admin-content').innerHTML = `
+    <div style="max-width:440px;margin:60px auto">
+      <div class="card">
+        <h3>Admin Login</h3>
+        <p style="font-size:14px;color:var(--text-soft);margin-bottom:28px;line-height:1.6">
+          Sign in with your Supabase admin account.
+        </p>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" value="${ADMIN_EMAIL}" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-pass" placeholder="••••••••">
+        </div>
+        <button class="btn btn-accent" id="login-btn" style="width:100%">Sign In</button>
+      </div>
+    </div>`;
+  
+  document.getElementById('login-btn').onclick = async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    if (!email || !pass) return toast('Enter email and password');
+    const btn = document.getElementById('login-btn');
+    btn.textContent = 'Signing in...';
+    btn.disabled = true;
+    try {
+      await sbLogin(email, pass);
+      toast('Welcome back!');
+      setTimeout(() => location.reload(), 800);
+    } catch (e) {
+      toast(e.message, 3000);
+      btn.textContent = 'Sign In';
+      btn.disabled = false;
+    }
+  };
+  
+  document.getElementById('login-pass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('login-btn').click();
+  });
+}
+
+function logout() {
+  sbLogout();
+  location.reload();
+}
+
+function initTabs() {
+  document.querySelectorAll('.admin-tab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderTab(tab.dataset.tab);
+    };
+  });
+}
+
+function renderTab(tab) {
+  state.currentTab = tab;
+  const content = document.getElementById('admin-content');
+  content.innerHTML = '<div class="spinner"></div>';
+  
+  if (tab === 'dashboard') renderDashboard(content);
+  else if (tab === 'import') renderImport(content);
+  else if (tab === 'movies') renderMovies(content);
+  else if (tab === 'ads') renderAds(content);
+  else if (tab === 'settings') renderSettings(content);
+  else if (tab === 'logs') renderLogs(content);
+}
+
+// ============================================
+// DASHBOARD
+// ============================================
+async function renderDashboard(container) {
+  try {
+    const [movies, imports] = await Promise.all([
+      sbFetch('movies?select=id,title,views,download_count,created_at'),
+      sbFetch('import_logs?select=*&order=created_at.desc&limit=5')
+    ]);
+    
+    const totalMovies = movies.length;
+    const totalDownloads = movies.reduce((s, m) => s + (m.download_count || 0), 0);
+    const totalViews = movies.reduce((s, m) => s + (m.views || 0), 0);
+    const topDownloads = [...movies].sort((a, b) => (b.download_count || 0) - (a.download_count || 0)).slice(0, 5);
+    
+    container.innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card"><div class="label">Total Movies</div><div class="value">${totalMovies}</div></div>
+        <div class="stat-card"><div class="label">Total Views</div><div class="value">${totalViews}</div></div>
+        <div class="stat-card"><div class="label">Total Downloads</div><div class="value">${totalDownloads}</div></div>
+        <div class="stat-card"><div class="label">Imports</div><div class="value">${imports.length}</div></div>
+      </div>
+      
+      <div class="card">
+        <h3>🔥 Most Downloaded</h3>
+        ${topDownloads.length ? topDownloads.map(m => `
+          <div class="list-item">
+            <div class="info">
+              <h4>${escapeHtml(m.title)}</h4>
+              <p>${m.download_count || 0} downloads · ${m.views || 0} views</p>
+            </div>
+          </div>
+        `).join('') : '<p style="color:#6b6b6b">No data yet</p>'}
+      </div>
+      
+      <div class="card">
+        <h3>🆕 Recent Imports</h3>
+        ${imports.length ? imports.map(i => `
+          <div class="list-item">
+            <div class="info">
+              <h4>${escapeHtml(i.filename || 'Unknown file')}</h4>
+              <p>${i.imported_count || 0} imported · ${i.failed_count || 0} failed · ${new Date(i.created_at).toLocaleString()}</p>
+            </div>
+          </div>
+        `).join('') : '<p style="color:#6b6b6b">No imports yet</p>'}
+      </div>
+    `;
+  } catch (e) {
+    container.innerHTML = `<div class="empty"><h3>Error</h3><p>${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+// ============================================
+// BULK IMPORT WITH IMAGE SUPPORT
+// ============================================
+let importState = { rawRows: [], headers: [], mapping: {}, currentFile: '', images: {} };
+
+const COLUMN_ALIASES = {
+  title: ['movie name','name','title','film','movie title','movie','parent_title'],
+  release_year: ['year','release year','release date','yr','released'],
+  genre: ['genre','category','genres','type of movie'],
+  language: ['language','audio','lang','languages'],
+  quality: ['quality','resolution','print'],
+  imdb_rating: ['imdb','rating','imdb rating','score'],
+  poster_url: ['poster','poster url','image','poster link','img'],
+  backdrop_url: ['banner','banner url','backdrop','cover'],
+  description: ['description','overview','synopsis','plot','story'],
+  ott_platform: ['ott','platform','streaming service','ott platform','ott name'],
+  type: ['type','content type','category type','kind'],
+  duration: ['duration','runtime','length','time'],
+  trailer_url: ['trailer','trailer url','youtube'],
+  quality_480p: ['480p','480p link','sd','480'],
+  quality_720p: ['720p','720p link','hd','720'],
+  quality_1080p: ['1080p','1080p link','fhd','1080','full hd'],
+  quality_2160p: ['2160p','4k','4k link','uhd','2160'],
+  file_size: ['size','file size','filesize'],
+  download_url: ['download','download link','url','watch url','link','download url','final_url']
+};
+
+function renderImport(container) {
+  container.innerHTML = `
+    <div class="card">
+      <h3>📥 Bulk Import from Excel / CSV</h3>
+      
+      <div id="import-step-1">
+        <div style="margin-bottom:20px">
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px">Step 1: Upload Excel/CSV File</label>
+          <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" style="padding:16px;border:2px dashed rgba(139,92,246,.4);border-radius:12px;width:100%">
+        </div>
+
+        <div style="margin-bottom:20px">
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:8px">Step 2 (Optional): Upload Images for Auto-Match</label>
+          <div class="bulk-image-drop" id="bulk-image-drop">
+            <p>📁 Click or Drag & Drop Images Here</p>
+            <p style="font-size:12px;margin-top:4px;color:var(--text-mute)">File names should match the Movie Title in Excel (e.g., "Avengers.jpg")</p>
+            <input type="file" id="bulk-image-input" multiple accept="image/*" style="display:none">
+          </div>
+          <div id="image-match-status" style="margin-top:10px;font-size:13px;color:var(--accent)"></div>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" id="download-template">📄 Download Template</button>
+          <button class="btn btn-ghost btn-sm" id="export-movies">📤 Export Movies</button>
+        </div>
+      </div>
+      
+      <div id="import-step-2" style="display:none;margin-top:20px">
+        <h4 style="margin-bottom:12px">🔍 Column Mapping</h4>
+        <div id="mapping-ui"></div>
+        <h4 style="margin:20px 0 12px">📋 Data Preview (first 10 rows)</h4>
+        <div id="preview-table" style="overflow-x:auto;max-height:400px"></div>
+        <div id="validation-report" style="margin-top:16px"></div>
+        <div style="margin-top:20px;display:flex;gap:8px;flex-wrap:wrap">
+          <select id="duplicate-mode" style="padding:10px;width:auto">
+            <option value="skip">Skip Duplicates</option>
+            <option value="update">Update Existing</option>
+            <option value="merge">Merge Links</option>
+          </select>
+          <button class="btn btn-accent" id="start-import-btn">✅ Start Import</button>
+          <button class="btn btn-ghost" id="cancel-import-btn">❌ Cancel</button>
+        </div>
+        <div id="import-progress" style="display:none;margin-top:20px">
+          <div style="background:rgba(255,255,255,.1);height:8px;border-radius:4px;overflow:hidden">
+            <div id="import-progress-bar" style="height:100%;width:0;background:linear-gradient(90deg,#8b5cf6,#6366f1);transition:width .3s"></div>
+          </div>
+          <p id="import-progress-text" style="font-size:12px;margin-top:8px;color:#a3a3a3"></p>
+        </div>
+      </div>
+      
+      <div style="margin-top:32px">
+        <h4 style="margin-bottom:12px">📜 Import History</h4>
+        <div id="import-history"></div>
+      </div>
+    </div>`;
+  
+  bindImportEvents();
+  loadImportHistory();
+}
+
+function bindImportEvents() {
+  const fileInput = document.getElementById('excel-file-input');
+  const imageInput = document.getElementById('bulk-image-input');
+  const dropZone = document.getElementById('bulk-image-drop');
+
+  // Handle Excel/CSV upload
+  fileInput.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    importState.currentFile = file.name;
+    
+    try {
+      const rows = await parseExcel(file);
+      importState.rawRows = rows;
+      const headers = Object.keys(rows[0] || {});
+      importState.headers = headers;
+      
+      const detected = detectColumns(headers);
+      
+      try {
+        const saved = await sbFetch('site_settings?setting_key=eq.column_mapping_memory&select=setting_value');
+        if (saved && saved[0] && saved[0].setting_value) {
+          const mem = saved[0].setting_value;
+          headers.forEach(h => {
+            if (mem[h] && COLUMN_ALIASES[mem[h]]) {
+              detected.mapping[h] = mem[h];
+              detected.confidence[h] = 'high';
+            }
+          });
+        }
+      } catch (e) {}
+      
+      renderMappingUI(headers, detected.mapping, detected.confidence);
+      renderPreview(rows, headers);
+      document.getElementById('import-step-1').style.display = 'none';
+      document.getElementById('import-step-2').style.display = 'block';
+    } catch (err) {
+      toast('Failed to parse: ' + err.message, 3000);
+    }
+  };
+
+  // Handle Image drag & drop
+  dropZone.addEventListener('click', () => imageInput.click());
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
+  dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'rgba(139,92,246,.4)'; });
+  dropZone.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = 'rgba(139,92,246,.4)';
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    await processImages(files);
+  });
+
+  imageInput.onchange = async (e) => {
+    const files = Array.from(e.target.files);
+    await processImages(files);
+  };
+  
+  document.getElementById('download-template').onclick = downloadTemplate;
+  document.getElementById('export-movies').onclick = exportMovies;
+  document.getElementById('cancel-import-btn').onclick = () => {
+    document.getElementById('import-step-1').style.display = 'block';
+    document.getElementById('import-step-2').style.display = 'none';
+  };
+  document.getElementById('start-import-btn').onclick = startImport;
+}
+
+// Process images and map them by name
+async function processImages(files) {
+  if (!files.length) return;
+  const statusEl = document.getElementById('image-match-status');
+  statusEl.innerHTML = `⏳ Processing ${files.length} images...`;
+
+  const images = {};
+  for (const file of files) {
+    // Remove extension for matching (e.g., "Avengers.jpg" -> "avengers")
+    const name = file.name.replace(/\.[^/.]+$/, "").toLowerCase().trim();
+    images[name] = file;
+  }
+
+  importState.images = images;
+  statusEl.innerHTML = `✅ Loaded ${files.length} images. They will be matched by filename to Movie Title during import.`;
+}
+
+function parseExcel(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+        if (!rows.length) return reject(new Error('No data'));
+        resolve(rows);
+      } catch (err) { reject(err); }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function detectColumns(headers) {
+  const mapping = {};
+  const confidence = {};
+  
+  headers.forEach(header => {
+    const norm = normalize(header);
+    let best = null, bestScore = 0;
+    
+    Object.keys(COLUMN_ALIASES).forEach(field => {
+      COLUMN_ALIASES[field].forEach(alias => {
+        const a = normalize(alias);
+        let score = 0;
+        if (norm === a) score = 100;
+        else if (norm.includes(a) || a.includes(norm)) score = 80;
+        else {
+          const hw = norm.split(' ');
+          const aw = a.split(' ');
+          const matches = hw.filter(w => aw.includes(w)).length;
+          score = (matches / Math.max(hw.length, aw.length)) * 70;
+        }
+        if (score > bestScore) { bestScore = score; best = field; }
+      });
+    });
+    
+    if (best && bestScore >= 50) {
+      mapping[header] = best;
+      confidence[header] = bestScore >= 90 ? 'high' : 'medium';
+    } else {
+      mapping[header] = '';
+      confidence[header] = 'low';
+    }
+  });
+  
+  return { mapping, confidence };
+}
+
+function normalize(str) {
+  return String(str || '').toLowerCase().trim()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+function renderMappingUI(headers, mapping, confidence) {
+  const dbFields = [
+    { v: '', l: '-- Ignore / Remove --' },
+    { v: 'title', l: 'Movie Title *' },
+    { v: 'release_year', l: 'Release Year' },
+    { v: 'genre', l: 'Genre' },
+    { v: 'language', l: 'Language' },
+    { v: 'quality', l: 'Quality (single)' },
+    { v: 'imdb_rating', l: 'IMDb Rating' },
+    { v: 'poster_url', l: 'Poster URL' },
+    { v: 'backdrop_url', l: 'Backdrop URL' },
+    { v: 'description', l: 'Description' },
+    { v: 'ott_platform', l: 'OTT Platform' },
+    { v: 'type', l: 'Content Type' },
+    { v: 'duration', l: 'Duration' },
+    { v: 'trailer_url', l: 'Trailer URL' },
+    { v: 'quality_480p', l: '480p Link' },
+    { v: 'quality_720p', l: '720p Link' },
+    { v: 'quality_1080p', l: '1080p Link' },
+    { v: 'quality_2160p', l: '4K Link' },
+    { v: 'file_size', l: 'File Size' },
+    { v: 'download_url', l: 'Generic Download URL' }
+  ];
+  
+  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">';
+  headers.forEach(h => {
+    const c = confidence[h];
+    const color = c === 'high' ? '#22c55e' : c === 'medium' ? '#f59e0b' : '#ef4444';
+    const icon = c === 'high' ? '✅' : c === 'medium' ? '⚠️' : '❌';
+    html += `<div style="padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:8px">
+      <div style="font-size:11px;color:#a3a3a3;margin-bottom:6px">${icon} Excel: <b>${escapeHtml(h)}</b></div>
+      <select data-map-col="${escapeHtml(h)}" style="width:100%;padding:8px;background:#1a1a1a;color:#fff;border:1px solid ${color};border-radius:6px">
+        ${dbFields.map(f => `<option value="${f.v}" ${mapping[h] === f.v ? 'selected' : ''}>${f.l}</option>`).join('')}
+      </select>
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('mapping-ui').innerHTML = html;
+}
+
+function renderPreview(rows, headers) {
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:rgba(139,92,246,.1)">';
+  headers.forEach(h => html += `<th style="padding:6px;text-align:left;color:#c4b5fd;border-bottom:1px solid rgba(255,255,255,.1)">${escapeHtml(h)}</th>`);
+  html += '</tr></thead><tbody>';
+  rows.slice(0, 10).forEach(row => {
+    html += '<tr>';
+    headers.forEach(h => {
+      const val = String(row[h] || '');
+      html += `<td style="padding:6px;border-bottom:1px solid rgba(255,255,255,.05);color:#d4d4d8">${val.length > 40 ? escapeHtml(val.substring(0, 40)) + '…' : escapeHtml(val)}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  if (rows.length > 10) html += `<p style="margin-top:8px;font-size:11px;color:#6b6b6b">...and ${rows.length - 10} more rows</p>`;
+  document.getElementById('preview-table').innerHTML = html;
+}
+
+// Smart Image Matching Logic
+function findImageForTitle(title) {
+  const normTitle = title.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '');
+  
+  // 1. Try exact match
+  if (importState.images[normTitle]) return importState.images[normTitle];
+  
+  // 2. Try partial match (Fuzzy)
+  const imageKeys = Object.keys(importState.images);
+  for (const key of imageKeys) {
+    const normKey = key.replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '');
+    if (normKey.includes(normTitle) || normTitle.includes(normKey)) {
+      return importState.images[key];
+    }
+  }
+  return null;
+}
+
+function validateAndParse(rows, mapping) {
+  const movies = {};
+  const errors = [];
+  let linkCount = 0;
+  
+  rows.forEach((row, idx) => {
+    const rowNum = idx + 2;
+    const movie = { title: '', release_year: null, genres: [], languages: [], poster_url: '', backdrop_url: '', description: '', ott_platform: '', type: 'movie', duration: null, imdb_rating: null, trailer_url: '' };
+    const links = [];
+    
+    Object.keys(mapping).forEach(excelCol => {
+      const dbField = mapping[excelCol];
+      if (!dbField) return;
+      const val = String(row[excelCol] || '').trim();
+      if (!val) return;
+      
+      if (dbField === 'title') movie.title = val;
+      else if (dbField === 'release_year') movie.release_year = parseInt(val) || null;
+      else if (dbField === 'genre') movie.genres = val.split(/[,;|]/).map(s => s.trim()).filter(Boolean);
+      else if (dbField === 'language') movie.languages = val.split(/[,;|]/).map(s => s.trim()).filter(Boolean);
+      else if (dbField === 'imdb_rating') movie.imdb_rating = parseFloat(val) || null;
+      else if (dbField === 'poster_url') movie.poster_url = val;
+      else if (dbField === 'backdrop_url') movie.backdrop_url = val;
+      else if (dbField === 'description') movie.description = val;
+      else if (dbField === 'ott_platform') movie.ott_platform = val;
+      else if (dbField === 'type') movie.type = val.toLowerCase();
+      else if (dbField === 'duration') movie.duration = parseInt(val.replace(/\D/g, '')) || null;
+      else if (dbField === 'trailer_url') movie.trailer_url = val;
+      else if (dbField === 'quality_480p' && val) links.push({ quality: '480p', download_url: val });
+      else if (dbField === 'quality_720p' && val) links.push({ quality: '720p', download_url: val });
+      else if (dbField === 'quality_1080p' && val) links.push({ quality: '1080p', download_url: val });
+      else if (dbField === 'quality_2160p' && val) links.push({ quality: '2160p', download_url: val });
+      else if (dbField === 'file_size' && val && links.length) links[links.length - 1].file_size = val;
+      else if (dbField === 'download_url' && val) links.push({ quality: 'default', download_url: val });
+    });
+    
+    if (!movie.title) {
+      errors.push({ row: rowNum, error: 'Missing title' });
+      return;
+    }
+    
+    links.forEach(l => {
+      if (l.download_url && !/^https?:\/\//i.test(l.download_url)) {
+        errors.push({ row: rowNum, error: 'Invalid URL: ' + l.download_url });
+        l.download_url = '';
+      }
+    });
+    const validLinks = links.filter(l => l.download_url);
+    
+    const key = slugify(movie.title) + '|' + (movie.release_year || '');
+    if (movies[key]) {
+      movies[key].links = movies[key].links.concat(validLinks);
+    } else {
+      movie.slug = slugify(movie.title);
+      if (movie.release_year) movie.slug += '-' + movie.release_year;
+      movie.links = validLinks;
+      movies[key] = movie;
+    }
+    linkCount += validLinks.length;
+  });
+  
+  return { movies: Object.values(movies), errors, totalLinks: linkCount };
+}
+
+async function startImport() {
+  const mapping = {};
+  let hasTitle = false;
+  document.querySelectorAll('[data-map-col]').forEach(sel => {
+    if (sel.value) {
+      mapping[sel.dataset.mapCol] = sel.value;
+      if (sel.value === 'title') hasTitle = true;
+    }
+  });
+  
+  if (!hasTitle) return toast('Map at least one column to Movie Title');
+  
+  const result = validateAndParse(importState.rawRows, mapping);
+  
+  let reportHtml = '';
+  if (result.errors.length) {
+    reportHtml = `<div style="padding:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px">
+      <h4 style="color:#f87171;margin-bottom:8px">⚠️ ${result.errors.length} issues</h4>
+      <ul style="font-size:12px;color:#fca5a5;max-height:150px;overflow-y:auto;padding-left:20px">
+        ${result.errors.slice(0, 20).map(e => `<li>Row ${e.row}: ${escapeHtml(e.error)}</li>`).join('')}
+      </ul>
+    </div>`;
+  } else {
+    reportHtml = `<div style="padding:12px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px">
+      <p style="color:#86efac">✅ Ready to import ${result.movies.length} unique movies with ${result.totalLinks} download links.</p>
+    </div>`;
+  }
+  document.getElementById('validation-report').innerHTML = reportHtml;
+  
+  if (!result.movies.length) return toast('No valid movies');
+  
+  const mode = document.getElementById('duplicate-mode').value;
+  await importMovies(result.movies, result.errors, mode, mapping);
+}
+
+async function importMovies(parsedMovies, errors, mode, mapping) {
+  const total = parsedMovies.length;
+  let imported = 0, skipped = 0, failed = 0;
+  const importedIds = [];
+  
+  const progressBar = document.getElementById('import-progress-bar');
+  const progressText = document.getElementById('import-progress-text');
+  document.getElementById('import-progress').style.display = 'block';
+  
+  try {
+    const logResult = await sbFetch('import_logs', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify({
+        filename: importState.currentFile || 'unknown',
+        total_rows: total,
+        status: 'processing',
+        admin_email: ADMIN_EMAIL
+      })
+    });
+    const logId = logResult && logResult[0] ? logResult[0].id : null;
+    
+    for (let idx = 0; idx < parsedMovies.length; idx++) {
+      const movie = parsedMovies[idx];
+      progressText.textContent = `Processing ${idx + 1}/${total}: ${movie.title}...`;
+      progressBar.style.width = ((idx + 1) / total * 100) + '%';
+      
+      try {
+        // Check for image match
+        let uploadedPosterUrl = movie.poster_url;
+        if (!uploadedPosterUrl || uploadedPosterUrl.trim() === '') {
+          const imgFile = findImageForTitle(movie.title);
+          if (imgFile) {
+            progressText.textContent = `Uploading poster for ${movie.title}...`;
+            try {
+              uploadedPosterUrl = await sbUpload(imgFile, 'posters');
+            } catch (imgErr) {
+              console.warn('Image upload failed for ' + movie.title, imgErr);
+            }
+          }
+        }
+
+        const movieData = {
+          title: movie.title,
+          slug: movie.slug,
+          description: movie.description,
+          short_synopsis: (movie.description || '').substring(0, 150),
+          type: movie.type || 'movie',
+          poster_url: uploadedPosterUrl || null,
+          backdrop_url: movie.backdrop_url,
+          trailer_url: movie.trailer_url,
+          release_year: movie.release_year,
+          duration: movie.duration,
+          language: movie.languages,
+          genres: movie.genres,
+          imdb_rating: movie.imdb_rating,
+          ott_platform: movie.ott_platform,
+          status: 'published',
+          published_at: new Date().toISOString()
+        };
+        
+        const existing = await sbFetch('movies?slug=eq.' + encodeURIComponent(movie.slug) + '&select=id');
+        
+        if (existing && existing.length) {
+          if (mode === 'skip') {
+            skipped++;
+            continue;
+          } else if (mode === 'update') {
+            await sbFetch('movies?id=eq.' + existing[0].id, { method: 'PATCH', body: JSON.stringify(movieData) });
+            imported++;
+            importedIds.push(existing[0].id);
+            await sbFetch('movie_links?movie_id=eq.' + existing[0].id, { method: 'DELETE' });
+            if (movie.links.length) {
+              await sbFetch('movie_links', {
+                method: 'POST',
+                body: JSON.stringify(movie.links.map(l => ({ movie_id: existing[0].id, quality: l.quality || 'default', file_size: l.file_size || null, download_url: l.download_url, link_type: 'download' })))
+              });
+            }
+            continue;
+          } else if (mode === 'merge') {
+            imported++;
+            importedIds.push(existing[0].id);
+            if (movie.links.length) {
+              await sbFetch('movie_links', {
+                method: 'POST',
+                body: JSON.stringify(movie.links.map(l => ({ movie_id: existing[0].id, quality: l.quality || 'default', file_size: l.file_size || null, download_url: l.download_url, link_type: 'download' })))
+              });
+            }
+            continue;
+          }
+        }
+        
+        const inserted = await sbFetch('movies', { method: 'POST', body: JSON.stringify(movieData) });
+        const newId = inserted[0].id;
+        imported++;
+        importedIds.push(newId);
+        
+        if (movie.links.length) {
+          await sbFetch('movie_links', {
+            method: 'POST',
+            body: JSON.stringify(movie.links.map(l => ({ movie_id: newId, quality: l.quality || 'default', file_size: l.file_size || null, download_url: l.download_url, link_type: 'download' })))
+          });
+        }
+      } catch (err) {
+        console.error('Row error:', err);
+        failed++;
+        errors.push({ row: idx + 2, error: err.message });
+      }
+    }
+    
+    if (logId) {
+      await sbFetch('import_logs?id=eq.' + logId, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          imported_count: imported,
+          skipped_count: skipped,
+          failed_count: failed,
+          movie_ids: importedIds,
+          error_report: errors,
+          status: 'completed'
+        })
+      });
+    }
+    
+    await sbFetch('site_settings?setting_key=eq.column_mapping_memory', {
+      method: 'PATCH',
+      body: JSON.stringify({ setting_value: mapping, updated_at: new Date().toISOString() })
+    }).catch(() => {});
+    
+    progressText.textContent = `✅ Done! Imported: ${imported}, Skipped: ${skipped}, Failed: ${failed}`;
+    toast(`Import complete: ${imported} movies`);
+    
+    setTimeout(() => {
+      document.getElementById('import-step-1').style.display = 'block';
+      document.getElementById('import-step-2').style.display = 'none';
+      loadImportHistory();
+    }, 2000);
+    
+  } catch (err) {
+    toast('Import failed: ' + err.message, 4000);
+  }
+}
+
+async function loadImportHistory() {
+  const box = document.getElementById('import-history');
+  if (!box) return;
+  
+  try {
+    const logs = await sbFetch('import_logs?select=*&order=created_at.desc&limit=10');
+    if (!logs || !logs.length) {
+      box.innerHTML = '<p style="color:#6b6b6b;font-size:13px">No imports yet.</p>';
+      return;
+    }
+    
+    let html = '<table style="width:100%;font-size:12px;border-collapse:collapse"><thead><tr style="background:rgba(139,92,246,.1)"><th style="padding:8px;text-align:left">Date</th><th style="padding:8px;text-align:left">File</th><th style="padding:8px">Imported</th><th style="padding:8px">Skipped</th><th style="padding:8px">Failed</th><th style="padding:8px">Action</th></tr></thead><tbody>';
+    
+    logs.forEach(log => {
+      // FIXED ROLLBACK LOGIC
+      const canRollback = log.movie_ids && log.movie_ids.length > 0 && log.status !== 'rolled_back';
+      html += `<tr style="border-bottom:1px solid rgba(255,255,255,.05)">
+        <td style="padding:8px">${new Date(log.created_at).toLocaleString()}</td>
+        <td style="padding:8px">${escapeHtml(log.filename || '-')}</td>
+        <td style="padding:8px;color:#22c55e">${log.imported_count || 0}</td>
+        <td style="padding:8px;color:#f59e0b">${log.skipped_count || 0}</td>
+        <td style="padding:8px;color:#ef4444">${log.failed_count || 0}</td>
+        <td style="padding:8px">${canRollback ? `<button class="btn btn-danger btn-sm" data-rollback="${log.id}">Rollback</button>` : `<span style="color:#6b6b6b">${log.status}</span>`}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    box.innerHTML = html;
+    
+    box.querySelectorAll('[data-rollback]').forEach(btn => {
+      btn.onclick = async () => {
+        try {
+          const log = await sbFetch('import_logs?id=eq.' + btn.dataset.rollback + '&select=movie_ids,imported_count,filename');
+          if (!log[0] || !log[0].movie_ids || !log[0].movie_ids.length) return toast('No movies to rollback');
+          
+          const count = log[0].movie_ids.length;
+          const filename = log[0].filename || 'this import';
+          if (!confirm(`Delete ${count} movies imported from "${filename}"? This cannot be undone.`)) return;
+          
+          for (const id of log[0].movie_ids) {
+            await sbFetch('movies?id=eq.' + id, { method: 'DELETE' });
+          }
+          await sbFetch('import_logs?id=eq.' + btn.dataset.rollback, { method: 'PATCH', body: JSON.stringify({ status: 'rolled_back' }) });
+          toast(`Rolled back ${count} movies`);
+          loadImportHistory();
+        } catch (e) {
+          toast('Rollback failed: ' + e.message, 3000);
+        }
+      };
+    });
+  } catch (e) {
+    box.innerHTML = '<p style="color:#ef4444">Failed to load history</p>';
+  }
+}
+
+function downloadTemplate() {
+  const data = [{
+    'Movie Name': 'Example Movie',
+    'Year': 2024,
+    'Genre': 'Action, Thriller',
+    'Language': 'Hindi, English',
+    'Quality': '1080p',
+    'IMDb Rating': 8.5,
+    'Poster URL': 'https://example.com/poster.jpg',
+    'Banner URL': 'https://example.com/banner.jpg',
+    'Description': 'Short description',
+    'OTT Platform': 'Netflix',
+    'Type': 'movie',
+    'Duration': 120,
+    'Trailer URL': 'https://youtube.com/watch?v=xxx',
+    '480p Link': 'https://example.com/480p.mp4',
+    '720p Link': 'https://example.com/720p.mp4',
+    '1080p Link': 'https://example.com/1080p.mp4',
+    '4K Link': 'https://example.com/4k.mp4',
+    'File Size': '1.2GB'
+  }];
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Movies');
+  XLSX.writeFile(wb, 'movie-import-template.xlsx');
+}
+
+async function exportMovies() {
+  try {
+    const movies = await sbFetch('movies?select=*&order=created_at.desc');
+    if (!movies || !movies.length) return toast('No movies to export');
+    const data = movies.map(m => ({
+      'Movie Name': m.title,
+      'Year': m.release_year,
+      'Genre': (m.genres || []).join(', '),
+      'Language': (m.language || []).join(', '),
+      'IMDb Rating': m.imdb_rating,
+      'Poster URL': m.poster_url,
+      'Banner URL': m.backdrop_url,
+      'Description': m.description,
+      'OTT Platform': m.ott_platform,
+      'Type': m.type,
+      'Duration': m.duration,
+      'Trailer URL': m.trailer_url,
+      'Slug': m.slug,
+      'Status': m.status,
+      'Views': m.views,
+      'Downloads': m.download_count,
+      'Created': m.created_at
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Movies');
+    XLSX.writeFile(wb, 'movies-export-' + new Date().toISOString().split('T')[0] + '.xlsx');
+    toast('Exported ' + movies.length + ' movies');
+  } catch (e) {
+    toast('Export failed: ' + e.message, 3000);
+  }
+}
+
+// ============================================
+// MOVIES MANAGEMENT
+// ============================================
+async function renderMovies(container) {
+  try {
+    const movies = await sbFetch('movies?select=*&order=created_at.desc');
+    state.movies = movies;
+    
+    container.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <h2 style="font-size:20px;font-weight:700">Movies (${movies.length})</h2>
+        <button class="btn btn-accent btn-sm" onclick="showMovieForm(null)">+ Add Movie</button>
+      </div>
+      <div id="movie-form-wrap"></div>
+      <div id="movies-list"></div>`;
+    
+    const list = document.getElementById('movies-list');
+    list.innerHTML = movies.length ? movies.map(m => `
+      <div class="list-item">
+        <img src="${escapeHtml(m.poster_url || 'https://placehold.co/100x100/1e293b/8b5cf6?text=?')}" alt="">
+        <div class="info">
+          <h4>${escapeHtml(m.title)}</h4>
+          <p>${escapeHtml(m.type)} · ${m.release_year || '—'} · ${escapeHtml(m.status)} · ${m.views || 0} views · ${m.download_count || 0} downloads</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="showMovieForm('${m.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteMovie('${m.id}')">Delete</button>
+      </div>
+    `).join('') : '<div class="empty"><h3>No movies</h3><p>Click Add Movie or use Bulk Import.</p></div>';
+    
+  } catch (e) {
+    container.innerHTML = `<div class="empty"><h3>Error</h3><p>${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function showMovieForm(id) {
+  const movie = id ? state.movies.find(m => String(m.id) === String(id)) : null;
+  let links = [];
+  
+  if (movie) {
+    try {
+      links = await sbFetch('movie_links?movie_id=eq.' + movie.id + '&order=sort_order.asc');
+    } catch (e) {}
+  }
+  
+  const wrap = document.getElementById('movie-form-wrap');
+  wrap.innerHTML = `
+    <div class="card">
+      <h3>${movie ? 'Edit Movie' : 'Add Movie'}</h3>
+      
+      <div class="form-row">
+        <div class="form-group"><label>Title *</label><input id="f-title" value="${escapeHtml(movie?.title || '')}"></div>
+        <div class="form-group"><label>Slug (auto if empty)</label><input id="f-slug" value="${escapeHtml(movie?.slug || '')}"></div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group"><label>Type</label>
+          <select id="f-type">
+            ${['movie','series','anime','kdrama','documentary'].map(t => `<option value="${t}" ${movie?.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="f-status">
+            <option value="draft" ${movie?.status === 'draft' ? 'selected' : ''}>Draft</option>
+            <option value="published" ${movie?.status === 'published' ? 'selected' : ''}>Published</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-group"><label>Description</label><textarea id="f-description" rows="4">${escapeHtml(movie?.description || '')}</textarea></div>
+      
+      <div class="form-row">
+        <div class="form-group"><label>Release Year</label><input type="number" id="f-year" value="${movie?.release_year || ''}"></div>
+        <div class="form-group"><label>Duration (min)</label><input type="number" id="f-duration" value="${movie?.duration || ''}"></div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group"><label>Genres (comma separated)</label><input id="f-genres" value="${escapeHtml((movie?.genres || []).join(', '))}"></div>
+        <div class="form-group"><label>Languages (comma separated)</label><input id="f-languages" value="${escapeHtml((movie?.language || []).join(', '))}"></div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group"><label>IMDb Rating</label><input type="number" step="0.1" id="f-rating" value="${movie?.imdb_rating || ''}"></div>
+        <div class="form-group"><label>OTT Platform</label><input id="f-ott" value="${escapeHtml(movie?.ott_platform || '')}"></div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group"><label>Poster URL</label><input id="f-poster" value="${escapeHtml(movie?.poster_url || '')}"><div class="upload-status" id="upload-poster-status"></div></div>
+        <div class="form-group"><label>Backdrop URL</label><input id="f-backdrop" value="${escapeHtml(movie?.backdrop_url || '')}"></div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group"><label>Trailer URL</label><input id="f-trailer" value="${escapeHtml(movie?.trailer_url || '')}"></div>
+        <div class="form-group">
+          <label>Upload Poster File</label>
+          <input type="file" id="f-poster-file" accept="image/*">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label style="display:flex;gap:20px;flex-wrap:wrap">
+          <span class="checkbox-label"><input type="checkbox" id="f-featured" ${movie?.is_featured ? 'checked' : ''}> Featured</span>
+          <span class="checkbox-label"><input type="checkbox" id="f-trending" ${movie?.is_trending ? 'checked' : ''}> Trending</span>
+          <span class="checkbox-label"><input type="checkbox" id="f-premium" ${movie?.is_premium ? 'checked' : ''}> Premium</span>
+        </label>
+      </div>
+      
+      <h4 style="margin:20px 0 12px;font-size:15px">⬇ Download Links</h4>
+      <div id="links-list"></div>
+      <button class="btn btn-ghost btn-sm" id="add-link-btn" style="margin-top:8px">+ Add Link</button>
+      
+      <div style="margin-top:24px;display:flex;gap:8px">
+        <button class="btn btn-accent" id="save-movie-btn">💾 Save</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('movie-form-wrap').innerHTML=''">Cancel</button>
+      </div>
+    </div>`;
+  
+  // Link editor
+  function renderLinks() {
+    const box = document.getElementById('links-list');
+    box.innerHTML = links.map((l, i) => `
+      <div style="display:grid;grid-template-columns:1fr 1fr 2fr auto;gap:8px;margin-bottom:8px">
+        <input placeholder="Quality (720p)" value="${escapeHtml(l.quality || '')}" onchange="links[${i}].quality=this.value">
+        <input placeholder="Size (1.2GB)" value="${escapeHtml(l.file_size || '')}" onchange="links[${i}].file_size=this.value">
+        <input placeholder="https://download-url" value="${escapeHtml(l.download_url || '')}" onchange="links[${i}].download_url=this.value">
+        <button class="btn btn-danger btn-sm" onclick="links.splice(${i},1);renderLinks()">×</button>
+      </div>
+    `).join('') || '<p style="color:#6b6b6b;font-size:13px">No links added</p>';
+  }
+  window.links = links;
+  window.renderLinks = renderLinks;
+  renderLinks();
+  
+  document.getElementById('add-link-btn').onclick = () => {
+    links.push({ quality: '', file_size: '', download_url: '' });
+    renderLinks();
+  };
+  
+  document.getElementById('save-movie-btn').onclick = async () => {
+    const title = document.getElementById('f-title').value.trim();
+    if (!title) return toast('Title required');
+    
+    let poster_url = document.getElementById('f-poster').value.trim();
+    const posterFile = document.getElementById('f-poster-file').files[0];
+    if (posterFile) {
+      try {
+        document.getElementById('upload-poster-status').textContent = 'Uploading...';
+        poster_url = await sbUpload(posterFile, 'posters');
+        document.getElementById('upload-poster-status').textContent = '✓ Uploaded';
+      } catch (e) {
+        toast('Poster upload failed: ' + e.message, 3000);
+        return;
+      }
+    }
+    
+    const slug = document.getElementById('f-slug').value.trim() || slugify(title);
+    const data = {
+      title,
+      slug,
+      type: document.getElementById('f-type').value,
+      status: document.getElementById('f-status').value,
+      description: document.getElementById('f-description').value,
+      release_year: parseInt(document.getElementById('f-year').value) || null,
+      duration: parseInt(document.getElementById('f-duration').value) || null,
+      genres: document.getElementById('f-genres').value.split(',').map(s => s.trim()).filter(Boolean),
+      language: document.getElementById('f-languages').value.split(',').map(s => s.trim()).filter(Boolean),
+      imdb_rating: parseFloat(document.getElementById('f-rating').value) || null,
+      ott_platform: document.getElementById('f-ott').value.trim(),
+      poster_url,
+      backdrop_url: document.getElementById('f-backdrop').value.trim(),
+      trailer_url: document.getElementById('f-trailer').value.trim(),
+      is_featured: document.getElementById('f-featured').checked,
+      is_trending: document.getElementById('f-trending').checked,
+      is_premium: document.getElementById('f-premium').checked
+    };
+    
+    try {
+      let movieId;
+      if (movie) {
+        await sbFetch('movies?id=eq.' + movie.id, { method: 'PATCH', body: JSON.stringify(data) });
+        movieId = movie.id;
+        await sbFetch('movie_links?movie_id=eq.' + movie.id, { method: 'DELETE' });
+      } else {
+        const inserted = await sbFetch('movies', { method: 'POST', body: JSON.stringify({ ...data, published_at: new Date().toISOString() }) });
+        movieId = inserted[0].id;
+      }
+      
+      const validLinks = links.filter(l => l.download_url);
+      if (validLinks.length) {
+        await sbFetch('movie_links', {
+          method: 'POST',
+          body: JSON.stringify(validLinks.map(l => ({
+            movie_id: movieId,
+            quality: l.quality || 'default',
+            file_size: l.file_size || null,
+            download_url: l.download_url,
+            link_type: 'download'
+          })))
+        });
+      }
+      
+      toast('Movie saved!');
+      renderMovies(document.getElementById('admin-content'));
+    } catch (e) {
+      toast('Save failed: ' + e.message, 3000);
+    }
+  };
+}
+
+async function deleteMovie(id) {
+  if (!confirm('Delete this movie and all its links?')) return;
+  try {
+    await sbFetch('movies?id=eq.' + id, { method: 'DELETE' });
+    toast('Movie deleted');
+    renderMovies(document.getElementById('admin-content'));
+  } catch (e) {
+    toast('Delete failed: ' + e.message, 3000);
+  }
+}
+
+// ============================================
+// ADS MANAGEMENT
+// ============================================
+async function renderAds(container) {
+  try {
+    const ads = await sbFetch('ads?select=*&order=created_at.desc');
+    state.ads = ads;
+    
+    container.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <h2 style="font-size:20px;font-weight:700">Adsterra Ads (${ads.length})</h2>
+        <button class="btn btn-accent btn-sm" onclick="showAdForm(null)">+ Add Ad</button>
+      </div>
+      <div id="ad-form-wrap"></div>
+      <div id="ads-list"></div>`;
+    
+    const list = document.getElementById('ads-list');
+    list.innerHTML = ads.length ? ads.map(a => `
+      <div class="list-item">
+        <div class="info">
+          <h4>${escapeHtml(a.title || 'Untitled Ad')}</h4>
+          <p>Slot: ${escapeHtml(a.slot_key)} · Type: ${escapeHtml(a.ad_type)} · Active: ${a.is_active ? '✅' : '❌'}</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="showAdForm('${a.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteAd('${a.id}')">Delete</button>
+      </div>
+    `).join('') : '<div class="empty"><h3>No Ads</h3><p>Click Add Ad to add Adsterra banners.</p></div>';
+    
+  } catch (e) {
+    container.innerHTML = `<div class="empty"><h3>Error</h3><p>${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+async function showAdForm(id) {
+  const ad = id ? state.ads.find(a => String(a.id) === String(id)) : null;
+  const wrap = document.getElementById('ad-form-wrap');
+  
+  wrap.innerHTML = `
+    <div class="card">
+      <h3>${ad ? 'Edit Ad' : 'Add Ad'}</h3>
+      
+      <div class="form-row">
+        <div class="form-group"><label>Slot</label>
+          <select id="a-slot">
+            <option value="header_banner" ${ad?.slot_key === 'header_banner' ? 'selected' : ''}>Header Banner</option>
+            <option value="in_content_1" ${ad?.slot_key === 'in_content_1' ? 'selected' : ''}>In Content 1 (After Latest Releases)</option>
+            <option value="sidebar_top" ${ad?.slot_key === 'sidebar_top' ? 'selected' : ''}>Sidebar Top (Movie Detail)</option>
+            <option value="detail_below_download" ${ad?.slot_key === 'detail_below_download' ? 'selected' : ''}>Below Download Links</option>
+            <option value="popup_onclick" ${ad?.slot_key === 'popup_onclick' ? 'selected' : ''}>Popup (On Click)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Type</label>
+          <select id="a-type">
+            <option value="html" ${ad?.ad_type === 'html' ? 'selected' : ''}>HTML/JS Code (Banner/Native)</option>
+            <option value="script" ${ad?.ad_type === 'script' ? 'selected' : ''}>Script (Popunder/Social Bar)</option>
+            <option value="redirect" ${ad?.ad_type === 'redirect' ? 'selected' : ''}>Redirect URL (Smartlink)</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-group"><label>Title (Internal Use)</label><input id="a-title" value="${escapeHtml(ad?.title || '')}"></div>
+      
+      <div class="form-group">
+        <label>Ad Code / URL</label>
+        <textarea id="a-code" rows="5" placeholder="Paste Adsterra HTML/JS code or redirect URL here">${escapeHtml(ad?.ad_code || ad?.redirect_url || '')}</textarea>
+      </div>
+      
+      <div class="form-group">
+        <label class="checkbox-label"><input type="checkbox" id="a-active" ${ad?.is_active !== false ? 'checked' : ''}> Active</label>
+      </div>
+      
+      <div style="margin-top:24px;display:flex;gap:8px">
+        <button class="btn btn-accent" onclick="saveAd(${id ? `'${id}'` : 'null'})">💾 Save Ad</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('ad-form-wrap').innerHTML=''">Cancel</button>
+      </div>
+    </div>`;
+}
+
+async function saveAd(id) {
+  const slot = document.getElementById('a-slot').value;
+  const type = document.getElementById('a-type').value;
+  const title = document.getElementById('a-title').value.trim();
+  const code = document.getElementById('a-code').value.trim();
+  const active = document.getElementById('a-active').checked;
+  
+  if (!code) return toast('Ad code/URL required');
+  
+  const data = {
+    slot_key: slot,
+    ad_type: type,
+    title: title || slot,
+    is_active: active
+  };
+  
+  if (type === 'redirect') {
+    data.redirect_url = code;
+    data.ad_code = null;
+  } else {
+    data.ad_code = code;
+    data.redirect_url = null;
+  }
+  
+  try {
+    if (id) {
+      await sbFetch('ads?id=eq.' + id, { method: 'PATCH', body: JSON.stringify(data) });
+    } else {
+      await sbFetch('ads', { method: 'POST', body: JSON.stringify(data) });
+    }
+    toast('Ad saved!');
+    renderAds(document.getElementById('admin-content'));
+  } catch (e) {
+    toast('Save failed: ' + e.message, 3000);
+  }
+}
+
+async function deleteAd(id) {
+  if (!confirm('Delete this ad?')) return;
+  try {
+    await sbFetch('ads?id=eq.' + id, { method: 'DELETE' });
+    toast('Ad deleted');
+    renderAds(document.getElementById('admin-content'));
+  } catch (e) {
+    toast('Delete failed: ' + e.message, 3000);
+  }
+}
+
+// ============================================
+// SETTINGS
+// ============================================
+async function renderSettings(container) {
+  try {
+    const rows = await sbFetch('site_settings?select=*');
+    const settings = {};
+    (rows || []).forEach(r => settings[r.setting_key] = r.setting_value);
+    
+    const social = settings.social_links || {};
+    
+    container.innerHTML = `
+      <div class="card">
+        <h3>⚙️ Site Settings</h3>
+        <div class="form-group"><label>Site Name</label><input id="s-name" value="${escapeHtml(settings.site_name || 'MovieHub')}"></div>
+        <div class="form-group"><label>Announcement Banner</label>
+          <input id="s-banner-text" placeholder="Banner text..." value="${escapeHtml(settings.announcement_banner?.text || '')}">
+          <label class="checkbox-label" style="margin-top:8px"><input type="checkbox" id="s-banner-enabled" ${settings.announcement_banner?.enabled ? 'checked' : ''}> Enable banner</label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🔗 Social Media Links</h3>
+        <p style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Yahan apne social media profiles ke links daalein.</p>
+        <div class="form-row">
+          <div class="form-group"><label>Facebook URL</label><input id="s-fb" value="${escapeHtml(social.facebook || '')}" placeholder="https://facebook.com/..."></div>
+          <div class="form-group"><label>Instagram URL</label><input id="s-ig" value="${escapeHtml(social.instagram || '')}" placeholder="https://instagram.com/..."></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Twitter / X URL</label><input id="s-tw" value="${escapeHtml(social.twitter || '')}" placeholder="https://x.com/..."></div>
+          <div class="form-group"><label>YouTube URL</label><input id="s-yt" value="${escapeHtml(social.youtube || '')}" placeholder="https://youtube.com/@..."></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Telegram URL</label><input id="s-tg" value="${escapeHtml(social.telegram || '')}" placeholder="https://t.me/..."></div>
+          <div class="form-group"><label>WhatsApp Channel URL</label><input id="s-wa" value="${escapeHtml(social.whatsapp || '')}" placeholder="https://whatsapp.com/channel/..."></div>
+        </div>
+      </div>
+
+      <button class="btn btn-accent" id="save-settings-btn" style="width:100%">💾 Save All Settings</button>`;
+    
+    document.getElementById('save-settings-btn').onclick = async () => {
+      try {
+        const socialData = {
+          facebook: document.getElementById('s-fb').value.trim(),
+          instagram: document.getElementById('s-ig').value.trim(),
+          twitter: document.getElementById('s-tw').value.trim(),
+          youtube: document.getElementById('s-yt').value.trim(),
+          telegram: document.getElementById('s-tg').value.trim(),
+          whatsapp: document.getElementById('s-wa').value.trim()
+        };
+
+        const updates = [
+          { setting_key: 'site_name', setting_value: document.getElementById('s-name').value.trim() },
+          { setting_key: 'announcement_banner', setting_value: { enabled: document.getElementById('s-banner-enabled').checked, text: document.getElementById('s-banner-text').value.trim() } },
+          { setting_key: 'social_links', setting_value: socialData }
+        ];
+        for (const u of updates) {
+          await sbFetch('site_settings?setting_key=eq.' + u.setting_key, { method: 'PATCH', body: JSON.stringify({ setting_value: u.setting_value }) });
+        }
+        toast('Settings saved successfully!');
+      } catch (e) {
+        toast('Save failed: ' + e.message, 3000);
+      }
+    };
+  } catch (e) {
+    container.innerHTML = `<div class="empty"><h3>Error</h3><p>${escapeHtml(e.message)}</p></div>`;
+  }
+}
+
+// ============================================
+// LOGS
+// ============================================
+async function renderLogs(container) {
+  try {
+    const logs = await sbFetch('activity_logs?select=*&order=created_at.desc&limit=50');
+    if (!logs || !logs.length) {
+      container.innerHTML = '<div class="empty"><h3>No activity</h3><p>Admin actions will appear here.</p></div>';
+      return;
+    }
+    container.innerHTML = `
+      <div class="card">
+        <h3>📋 Activity Logs</h3>
+        ${logs.map(l => `
+          <div class="list-item">
+            <div class="info">
+              <h4>${escapeHtml(l.action)}</h4>
+              <p>${escapeHtml(l.admin_email || '—')} · ${escapeHtml(l.table_name || '')} · ${new Date(l.created_at).toLocaleString()}</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>`;
+  } catch (e) {
+    container.innerHTML = `<div class="empty"><h3>Error</h3><p>${escapeHtml(e.message)}</p></div>`;
+  }
+}
+</script>
+</body>
+</html>

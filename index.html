@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MovieHub — Movies, Series, Anime Downloads</title>
+<meta name="description" id="meta-desc" content="Download movies, web series, anime and K-drama in 480p, 720p, 1080p and 4K.">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#090c13;--p1:#0f1420;--p2:#161d2d;--line:rgba(255,255,255,.08);--tx:#e8edf7;--mu:#8b97ad;--gold:#ffb547;--teal:#2dd4bf;--red:#fb5d6b;--r:14px}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--tx);line-height:1.55;overflow-x:hidden}
+h1,h2,h3,.logo b{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+img{max-width:100%;display:block}
+input,select{font:inherit;font-size:14px;color:var(--tx);background:var(--p2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;outline:none}
+input:focus,select:focus{border-color:var(--teal)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:10px;font-weight:600;font-size:14px;transition:transform .15s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-gold{background:var(--gold);color:#1a1200}
+.btn-line{border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.btn-line:hover{background:rgba(255,255,255,.09)}
+/* nav */
+.nav{position:sticky;top:0;z-index:50;background:rgba(9,12,19,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:18px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-size:20px;flex-shrink:0}
+.logo i{width:32px;height:32px;border-radius:9px;background:var(--gold);color:#1a1200;display:grid;place-items:center;font-style:normal;font-size:14px}
+.links{display:flex;gap:2px;align-items:center}
+.links>a,.dd>span{padding:8px 12px;border-radius:8px;font-size:14px;font-weight:500;color:var(--mu);cursor:pointer;display:block}
+.links>a:hover,.dd:hover>span{color:var(--tx);background:rgba(255,255,255,.06)}
+.dd{position:relative}
+.dd>span::after{content:' ▾';font-size:10px}
+.dd-m{position:absolute;top:100%;left:0;min-width:190px;max-height:340px;overflow:auto;background:var(--p2);border:1px solid var(--line);border-radius:12px;padding:6px;opacity:0;visibility:hidden;transform:translateY(6px);transition:.15s;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.dd:hover .dd-m{opacity:1;visibility:visible;transform:none}
+.dd-m a{display:block;padding:8px 12px;border-radius:8px;font-size:13px;color:var(--tx);white-space:nowrap}
+.dd-m a:hover{background:rgba(255,181,71,.14);color:var(--gold)}
+.srch{margin-left:auto;position:relative;width:280px}
+.srch input{width:100%;padding-left:14px}
+#sug{position:absolute;top:46px;left:0;right:0;background:var(--p2);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:none;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+#sug a{display:flex;gap:10px;align-items:center;padding:8px 10px;font-size:13px}
+#sug a:hover{background:rgba(255,255,255,.06)}
+#sug img{width:32px;height:46px;object-fit:cover;border-radius:5px;background:var(--p1)}
+#sug small{color:var(--mu)}
+.ham{display:none;width:40px;height:40px;border:1px solid var(--line);border-radius:10px;font-size:18px}
+.mob{display:none;padding:8px 20px 18px;border-top:1px solid var(--line);max-height:75vh;overflow:auto}
+.mob.open{display:block}
+.mob a,.mob summary{display:block;padding:11px 4px;font-size:15px;border-bottom:1px solid var(--line);cursor:pointer}
+.mob details a{padding-left:16px;color:var(--mu);font-size:14px}
+.notice{background:linear-gradient(90deg,rgba(255,181,71,.16),rgba(45,212,191,.1));padding:9px 16px;text-align:center;font-size:13px}
+/* hero */
+.hero{position:relative;height:min(78vh,620px);min-height:440px;overflow:hidden;background:var(--p1)}
+.slide{position:absolute;inset:0;opacity:0;transition:opacity .9s;pointer-events:none}
+.slide.on{opacity:1;pointer-events:auto}
+.slide .bg{position:absolute;inset:0;background-size:cover;background-position:center top}
+.slide::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--bg) 0%,rgba(9,12,19,.82) 38%,rgba(9,12,19,.2) 75%),linear-gradient(0deg,var(--bg),transparent 35%)}
+.hin{position:relative;z-index:2;height:100%;display:flex;align-items:center}
+.hc{max-width:560px;display:flex;flex-direction:column;gap:16px}
+.hc h1{font-size:clamp(32px,5vw,58px);line-height:1.04;font-weight:800}
+.meta{display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:4px 11px;border-radius:999px;font-size:12px;font-weight:600;background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--tx)}
+.pill.g{background:rgba(255,181,71,.15);border-color:rgba(255,181,71,.35);color:var(--gold)}
+.pill.t{background:rgba(45,212,191,.13);border-color:rgba(45,212,191,.3);color:var(--teal)}
+.hc p{color:#c3ccdb;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.hctl{position:absolute;right:24px;bottom:28px;z-index:3;display:flex;gap:8px}
+.hctl button{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid var(--line);font-size:20px}
+.dots{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);display:flex;gap:6px;z-index:3}
+.dots span{width:7px;height:7px;border-radius:9px;background:rgba(255,255,255,.3);cursor:pointer}
+.dots span.on{width:24px;background:var(--gold)}
+/* rail + sections */
+.rail{display:flex;gap:8px;overflow-x:auto;padding:18px 0;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.chip{padding:8px 16px;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap;background:var(--p2);border:1px solid var(--line);color:var(--mu)}
+.chip:hover,.chip.on{color:#1a1200;background:var(--gold);border-color:var(--gold)}
+.stats{display:flex;gap:28px;flex-wrap:wrap;padding:6px 0 4px;color:var(--mu);font-size:13px}
+.stats b{color:var(--tx);font-size:18px;font-family:'Bricolage Grotesque'}
+.sec{padding:34px 0 6px}
+.sh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px;gap:12px}
+.sh h2{font-size:clamp(21px,2.6vw,28px);font-weight:700}
+.sh a{font-size:13px;color:var(--teal)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:18px}
+.hs{display:flex;gap:16px;overflow-x:auto;padding-bottom:14px;scrollbar-width:none}
+.hs::-webkit-scrollbar{display:none}
+.hs .card{min-width:176px;max-width:176px}
+.card{position:relative;display:block;border-radius:var(--r);overflow:hidden;background:var(--p1);border:1px solid var(--line);transition:transform .2s,border-color .2s}
+.card:hover{transform:translateY(-4px);border-color:rgba(255,181,71,.5)}
+.th{position:relative;aspect-ratio:2/3;background:linear-gradient(160deg,#1b2540,#0f1420);display:flex;align-items:center;justify-content:center;padding:14px;text-align:center;font-family:'Bricolage Grotesque';font-weight:700;color:#41507a;font-size:15px}
+.th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.th::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.65),transparent 45%)}
+.bq{position:absolute;top:8px;left:8px;z-index:2;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--gold);color:#1a1200}
+.br{position:absolute;top:8px;right:8px;z-index:2;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(0,0,0,.7);color:var(--gold)}
+.bt{position:absolute;bottom:8px;left:8px;z-index:2;font-size:11px;font-weight:600;color:#fff;text-transform:capitalize}
+.cb{padding:11px 12px 13px}
+.cb h3{font-size:14px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px;font-family:'DM Sans'}
+.cb small{display:block;margin-top:5px;color:var(--mu);font-size:12px}
+.wl{position:absolute;bottom:62px;right:8px;z-index:3;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.65);font-size:14px}
+.wl.s{background:var(--red)}
+/* list */
+.ph{padding:44px 0 18px}.ph h1{font-size:clamp(28px,4vw,42px);font-weight:800}.ph p{color:var(--mu)}
+.fb{display:flex;gap:10px;flex-wrap:wrap;padding:14px;background:var(--p1);border:1px solid var(--line);border-radius:var(--r);margin-bottom:22px}
+.pg{display:flex;gap:6px;justify-content:center;margin:34px 0;flex-wrap:wrap}
+.pg button{min-width:38px;padding:8px 12px;border-radius:8px;background:var(--p2);border:1px solid var(--line);font-size:13px;font-weight:600}
+.pg button.on{background:var(--gold);color:#1a1200;border-color:var(--gold)}
+/* detail */
+.crumb{font-size:13px;color:var(--mu);padding:22px 0 14px}
+.dh{position:relative;border-radius:20px;overflow:hidden;padding:28px;display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end;min-height:360px;background:var(--p1);isolation:isolate}
+.dh .bg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:-2;filter:blur(2px) brightness(.55)}
+.dh::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(9,12,19,.96),rgba(9,12,19,.35));z-index:-1}
+.dp{width:170px;flex-shrink:0;border-radius:12px;overflow:hidden;border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.dp .th{border-radius:0}
+.di{flex:1;min-width:260px;display:flex;flex-direction:column;gap:12px}
+.di h1{font-size:clamp(24px,3.6vw,40px);line-height:1.1;font-weight:800}
+.di p{color:#c3ccdb;max-width:720px}
+.lay{display:grid;grid-template-columns:1fr 290px;gap:28px;margin-top:28px}
+.side{background:var(--p1);border:1px solid var(--line);border-radius:var(--r);padding:18px;height:fit-content;position:sticky;top:84px}
+.side div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.side div:last-child{border:0}.side span:first-child{color:var(--mu)}.side span:last-child{font-weight:600;text-align:right}
+.qh{display:flex;align-items:center;gap:10px;margin:26px 0 10px;font-family:'Bricolage Grotesque';font-size:20px;font-weight:700}
+.qh em{font-style:normal;font-size:12px;color:var(--mu);font-family:'DM Sans';font-weight:500}
+.dl{display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:10px;background:var(--p1);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:12px;flex-wrap:wrap}
+.dl:hover{background:var(--p2)}
+.dt{flex:1;min-width:220px;font-size:14px;font-weight:500;line-height:1.45}
+.dm{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.how{margin-top:22px;padding:16px 18px;border-radius:12px;background:rgba(45,212,191,.07);border:1px solid rgba(45,212,191,.22);font-size:13px;color:#b6e9e2}
+.share{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.empty{text-align:center;padding:70px 20px;color:var(--mu)}.empty h3{color:var(--tx);font-size:20px;margin-bottom:6px}
+.sk{aspect-ratio:2/3;border-radius:var(--r);background:linear-gradient(90deg,var(--p1),var(--p2),var(--p1));background-size:200% 100%;animation:sh 1.4s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.foot{margin-top:70px;border-top:1px solid var(--line);background:var(--p1);padding:44px 0 26px}
+.fg{display:grid;grid-template-columns:2fr 1fr 1fr;gap:30px}
+.fg h4{margin-bottom:10px;font-family:'Bricolage Grotesque'}
+.fg a{display:block;padding:4px 0;color:var(--mu);font-size:14px}.fg a:hover{color:var(--tx)}
+.fg p{color:var(--mu);font-size:14px;max-width:360px;margin-top:10px}
+.copy{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--mu);text-align:center}
+#up{position:fixed;right:18px;bottom:18px;width:44px;height:44px;border-radius:50%;background:var(--gold);color:#1a1200;font-weight:800;display:none;z-index:60}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,150%);background:var(--gold);color:#1a1200;padding:12px 22px;border-radius:10px;font-weight:600;font-size:14px;transition:.3s;z-index:90}
+.toast.on{transform:translate(-50%,0)}
+/* Ad Container Styles */
+.ad-container{margin:20px 0;text-align:center;min-height:60px;overflow:hidden;display:flex;justify-content:center;align-items:center;background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.1);border-radius:12px;padding:10px}
+.ad-container:empty{display:none}
+.ad-sidebar{margin-bottom:20px}
+/* Footer Socials */
+.socials{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+.socials a{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:16px;color:var(--mu);transition:all .2s}
+.socials a:hover{background:var(--gold);color:#1a1200;border-color:var(--gold);transform:translateY(-2px)}
+@media(max-width:960px){.links{display:none}.ham{display:block;margin-left:auto}.srch{margin-left:0;flex:1;width:auto}.lay{grid-template-columns:1fr}.side{position:static}.fg{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.wrap{padding:0 14px}.grid{grid-template-columns:repeat(2,1fr);gap:12px}.hs .card{min-width:140px;max-width:140px}.dh{padding:18px}.dp{width:120px}.fg{grid-template-columns:1fr}.logo b{display:none}.hero{min-height:420px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="wrap bar">
+    <a href="#/" class="logo"><i>▶</i><b id="lg">MovieHub</b></a>
+    <nav class="links" id="links"></nav>
+    <div class="srch"><input id="q" type="search" placeholder="Search movies, series, anime" autocomplete="off" aria-label="Search"><div id="sug"></div></div>
+    <button class="ham" id="ham" aria-label="Menu">☰</button>
+  </div>
+  <div class="mob" id="mob"></div>
+</header>
+<div id="notice"></div>
+
+<!-- Header Ad Slot -->
+<div class="wrap"><div class="ad-container" id="ad-header"></div></div>
+
+<main id="main"></main>
+
+<footer class="foot"><div class="wrap">
+  <div class="fg">
+    <div>
+      <div class="logo"><i>▶</i><b id="lg2">MovieHub</b></div>
+      <p>Movies, web series, anime and K-drama in 480p, 720p, 1080p and 4K. New links added every day.</p>
+      <div class="socials" id="social-links"></div>
+    </div>
+    <div><h4>Browse</h4><a href="#/movies">All titles</a><a href="#/movies?type=series">Web series</a><a href="#/movies?type=anime">Anime</a><a href="#/watchlist">My watchlist</a></div>
+    <div><h4>Info</h4><a href="#/page/about">About</a><a href="#/page/disclaimer">Disclaimer</a><a href="#/page/privacy">Privacy</a><a href="#/page/contact">Contact</a></div>
+  </div>
+  <div class="copy">© <span id="yr"></span> MovieHub. We do not host any files; all links point to third-party sources.</div>
+</div></footer>
+<button id="up" aria-label="Back to top">↑</button>
+<div class="toast" id="toast"></div>
+
+<script>
+const SB = 'https://jshdjibwwtzdbbeevhqh.supabase.co';
+const KEY = 'sb_publishable_O-g_KLwUhimCSvUleXfzfA_ZpG8OyBd';
+const S = { movies: [], settings: {}, ads: {}, per: 20 };
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const QO = { '480p': 1, '720p': 2, '1080p': 3, '2160p': 4, '4k': 4 };
+const qr = q => QO[String(q || '').toLowerCase()] || 0;
+const TYPES = [['movie', 'Movies'], ['series', 'Web Series'], ['anime', 'Anime'], ['kdrama', 'K-Drama'], ['documentary', 'Documentary']];
+
+async function sb(p) {
+  const r = await fetch(SB + '/rest/v1/' + p, { headers: { apikey: KEY } });
+  if (!r.ok) throw new Error('Request failed (' + r.status + ')');
+  return r.json();
+}
+function toast(t) { const e = $('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove('on'), 2200); }
+function ls(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
+const wl = () => ls('mh_wl', []);
+function toggleWl(id, btn) {
+  let l = wl(); const has = l.includes(id);
+  l = has ? l.filter(x => x !== id) : l.concat(id);
+  try { localStorage.setItem('mh_wl', JSON.stringify(l)); } catch (e) {}
+  if (btn) { btn.classList.toggle('s', !has); btn.textContent = has ? '🤍' : '❤️'; }
+  toast(has ? 'Removed from watchlist' : 'Saved to watchlist');
+}
+function addRecent(id) { const l = [id].concat(ls('mh_rc', []).filter(x => x !== id)).slice(0, 12); try { localStorage.setItem('mh_rc', JSON.stringify(l)); } catch (e) {} }
+
+const flat = f => [...new Set(S.movies.flatMap(f).filter(Boolean))];
+const links = m => (m.movie_links || []).slice().sort((a, b) => qr(a.quality) - qr(b.quality) || (a.sort_order || 0) - (b.sort_order || 0));
+const topQ = m => { const l = links(m).filter(x => x.quality && x.quality !== 'default'); return l.length ? l[l.length - 1].quality : ''; };
+function setSeo(t, d) { document.title = t; $('meta-desc').setAttribute('content', d || 'Download movies, web series and anime in HD.'); }
+
+// ============================================
+// AD MANAGER (Public Site)
+// ============================================
+function renderAds() {
+  // 1. Header Banner
+  const headerAd = S.ads['header_banner'];
+  const headerEl = $('ad-header');
+  if (headerAd && headerAd.is_active) {
+    if (headerAd.ad_type === 'html' || headerAd.ad_type === 'script') {
+      headerEl.innerHTML = headerAd.ad_code;
+      headerEl.querySelectorAll('script').forEach(oldScript => {
+        const newScript = document.createElement('script');
+        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+      });
+    }
+  } else {
+    headerEl.style.display = 'none';
+  }
+}
+
+function injectAd(slotKey, container) {
+  const ad = S.ads[slotKey];
+  if (!ad || !ad.is_active) return;
+  if (ad.ad_type === 'html' || ad.ad_type === 'script') {
+    container.innerHTML = ad.ad_code;
+    container.querySelectorAll('script').forEach(oldScript => {
+      const newScript = document.createElement('script');
+      Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+      newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+      oldScript.parentNode.replaceChild(newScript, oldScript);
+    });
+  }
+}
+
+// Popup / Redirect Ad on Click
+function handlePopupAd() {
+  const popupAd = S.ads['popup_onclick'];
+  if (popupAd && popupAd.is_active && popupAd.ad_type === 'redirect' && popupAd.redirect_url) {
+    let opened = false;
+    const openPopup = () => {
+      if (!opened) {
+        window.open(popupAd.redirect_url, '_blank');
+        opened = true;
+        document.removeEventListener('click', openPopup);
+      }
+    };
+    document.addEventListener('click', openPopup, { once: false });
+  }
+}
+
+// ============================================
+// LOAD & BOOT
+// ============================================
+async function boot() {
+  $('yr').textContent = new Date().getFullYear();
+  $('main').innerHTML = '<div class="wrap"><div class="grid" style="padding-top:60px">' + '<div class="sk"></div>'.repeat(10) + '</div></div>';
+  
+  try {
+    const [m, s, a] = await Promise.all([
+      sb('movies?select=*,movie_links(id,quality,file_size,download_url,source_name,sort_order)&status=eq.published&order=created_at.desc'),
+      sb('site_settings?select=*'),
+      sb('ads?select=*&is_active=eq.true')
+    ]);
+    S.movies = m || [];
+    (s || []).forEach(r => S.settings[r.setting_key] = r.setting_value);
+    (a || []).forEach(ad => S.ads[ad.slot_key] = ad);
+  } catch (e) { 
+    $('main').innerHTML = '<div class="empty"><h3>Could not load titles</h3><p>' + esc(e.message) + '. Refresh the page to try again.</p></div>'; 
+    return; 
+  }
+  
+  const name = S.settings.site_name || 'MovieHub';
+  $('lg').textContent = name; $('lg2').textContent = name;
+  
+  const b = S.settings.announcement_banner;
+  if (b && b.enabled && b.text) $('notice').innerHTML = '<div class="notice">' + esc(b.text) + '</div>';
+  
+  // Social Links Footer
+  const social = S.settings.social_links || {};
+  const socialEl = $('social-links');
+  const socialMap = {
+    facebook: { icon: '📘', label: 'Facebook' },
+    instagram: { icon: '📸', label: 'Instagram' },
+    twitter: { icon: '🐦', label: 'Twitter' },
+    youtube: { icon: '▶️', label: 'YouTube' },
+    telegram: { icon: '✈️', label: 'Telegram' },
+    whatsapp: { icon: '💬', label: 'WhatsApp' }
+  };
+  let socialHtml = '';
+  Object.keys(socialMap).forEach(key => {
+    if (social[key] && social[key].trim()) {
+      socialHtml += `<a href="${esc(social[key])}" target="_blank" rel="noopener nofollow" title="${socialMap[key].label}" aria-label="${socialMap[key].label}">${socialMap[key].icon}</a>`;
+    }
+  });
+  socialEl.innerHTML = socialHtml;
+  
+  renderAds();
+  handlePopupAd();
+  buildNav(); 
+  route();
+}
+
+function buildNav() {
+  const G = flat(m => m.genres || []).sort();
+  const Y = flat(m => [m.release_year]).sort((a, b) => b - a);
+  const Q = flat(m => links(m).map(l => l.quality)).filter(q => q !== 'default').sort((a, b) => qr(a) - qr(b));
+  const O = flat(m => [m.ott_platform]).sort();
+  const grp = [['OTT', 'ott', O], ['Genre', 'genre', G], ['By Year', 'year', Y], ['By Quality', 'quality', Q]];
+  const href = (k, v) => '#/movies?' + k + '=' + encodeURIComponent(v);
+  $('links').innerHTML = '<a href="#/">Home</a>' +
+    grp.map(g => '<div class="dd"><span>' + g[0] + '</span><div class="dd-m">' + (g[2].length ? g[2].map(v => '<a href="' + href(g[1], v) + '">' + esc(v) + '</a>').join('') : '<a>Nothing yet</a>') + '</div></div>').join('') +
+    '<div class="dd"><span>Category</span><div class="dd-m">' + TYPES.map(t => '<a href="' + href('type', t[0]) + '">' + t[1] + '</a>').join('') + '</div></div>' +
+    '<a href="' + href('type', 'kdrama') + '">K-Drama</a><a href="' + href('type', 'anime') + '">Anime</a><a href="#/watchlist">Watchlist</a>';
+  $('mob').innerHTML = '<a href="#/">Home</a>' +
+    grp.map(g => '<details><summary>' + g[0] + '</summary>' + g[2].map(v => '<a href="' + href(g[1], v) + '">' + esc(v) + '</a>').join('') + '</details>').join('') +
+    '<details><summary>Category</summary>' + TYPES.map(t => '<a href="' + href('type', t[0]) + '">' + t[1] + '</a>').join('') + '</details><a href="#/watchlist">Watchlist</a>';
+}
+
+// ---------- cards ----------
+function card(m) {
+  const q = topQ(m), saved = wl().includes(m.id);
+  return `<a class="card" href="#/movie/${encodeURIComponent(m.slug)}">
+    <div class="th">${esc(m.title)}${m.poster_url ? `<img src="${esc(m.poster_url)}" alt="${esc(m.title)}" loading="lazy" onerror="this.remove()">` : ''}
+      ${q ? `<span class="bq">${esc(q)}</span>` : ''}${m.imdb_rating ? `<span class="br">★ ${m.imdb_rating}</span>` : ''}<span class="bt">${esc(m.type || 'movie')}</span></div>
+    <button class="wl ${saved ? 's' : ''}" onclick="event.preventDefault();event.stopPropagation();toggleWl('${m.id}',this)" aria-label="Save">${saved ? '❤️' : '🤍'}</button>
+    <div class="cb"><h3>${esc(m.title)}</h3><small>${m.release_year || ''}${m.language && m.language[0] ? ' · ' + esc(m.language.join(', ')) : ''}</small></div></a>`;
+}
+const row = (title, list, more) => list.length ? `<section class="sec"><div class="wrap"><div class="sh"><h2>${title}</h2>${more ? `<a href="${more}">See all</a>` : ''}</div><div class="hs">${list.map(card).join('')}</div></div></section>` : '';
+
+// ---------- router ----------
+function parse() { const h = (location.hash || '#/').slice(1), i = h.indexOf('?'); return { path: i < 0 ? h : h.slice(0, i), p: new URLSearchParams(i < 0 ? '' : h.slice(i + 1)) }; }
+function route() {
+  const { path, p } = parse(), main = $('main');
+  window.scrollTo(0, 0); $('mob').classList.remove('open'); clearInterval(hTimer);
+  if (path === '/' || !path) home(main);
+  else if (path === '/movies') list(main, p);
+  else if (path.indexOf('/movie/') === 0) detail(main, decodeURIComponent(path.slice(7)));
+  else if (path === '/watchlist') watch(main);
+  else if (path.indexOf('/page/') === 0) page(main, path.slice(6));
+  else main.innerHTML = '<div class="empty"><h3>Page not found</h3><p><a href="#/" style="color:var(--teal)">Go to the home page</a></p></div>';
+}
+window.addEventListener('hashchange', route);
+
+// ---------- home ----------
+let hi = 0, hTimer;
+function home(main) {
+  setSeo(($('lg').textContent) + ' — Movies, Series, Anime Downloads');
+  const M = S.movies;
+  if (!M.length) { main.innerHTML = '<div class="empty"><h3>No titles yet</h3><p>Add movies from the admin panel and they will appear here.</p></div>'; return; }
+  let feat = M.filter(m => m.is_featured).slice(0, 5); if (!feat.length) feat = M.slice(0, 5);
+  const Q = flat(m => links(m).map(l => l.quality)).filter(q => q !== 'default').sort((a, b) => qr(b) - qr(a));
+  const dl = M.reduce((s, m) => s + links(m).length, 0);
+  const trending = M.filter(m => m.is_trending), top = M.filter(m => m.imdb_rating).sort((a, b) => b.imdb_rating - a.imdb_rating).slice(0, 14);
+  const rec = ls('mh_rc', []).map(id => M.find(m => m.id === id)).filter(Boolean);
+  const G = flat(m => m.genres || []).slice(0, 3);
+  
+  // Ad slot in content
+  let adInContent = '';
+  if (S.ads['in_content_1'] && S.ads['in_content_1'].is_active) {
+    adInContent = `<div class="wrap"><div class="ad-container" id="ad-in-content"></div></div>`;
+  }
+
+  let h = `<section class="hero">${feat.map((m, i) => `<div class="slide ${i ? '' : 'on'}"><div class="bg" style="background-image:url('${esc(m.backdrop_url || m.poster_url || '')}')"></div>
+    <div class="wrap hin"><div class="hc"><div class="meta">${topQ(m) ? `<span class="pill g">${esc(topQ(m))}</span>` : ''}${m.release_year ? `<span class="pill">${m.release_year}</span>` : ''}${m.imdb_rating ? `<span class="pill t">★ ${m.imdb_rating}</span>` : ''}${(m.language || []).slice(0, 2).map(l => `<span class="pill">${esc(l)}</span>`).join('')}</div>
+    <h1>${esc(m.title)}</h1>${m.description ? `<p>${esc(m.description)}</p>` : ''}
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-gold" href="#/movie/${encodeURIComponent(m.slug)}">Download now</a><a class="btn btn-line" href="#/movie/${encodeURIComponent(m.slug)}">View details</a></div></div></div></div>`).join('')}
+    ${feat.length > 1 ? `<div class="dots">${feat.map((_, i) => `<span class="${i ? '' : 'on'}" data-d="${i}"></span>`).join('')}</div><div class="hctl"><button onclick="slide(-1)" aria-label="Previous">‹</button><button onclick="slide(1)" aria-label="Next">›</button></div>` : ''}</section>
+    <div class="wrap"><div class="rail">${Q.slice(0, 5).map(q => `<a class="chip" href="#/movies?quality=${encodeURIComponent(q)}">${esc(q)}</a>`).join('')}${TYPES.map(t => `<a class="chip" href="#/movies?type=${t[0]}">${t[1]}</a>`).join('')}${G.map(g => `<a class="chip" href="#/movies?genre=${encodeURIComponent(g)}">${esc(g)}</a>`).join('')}</div>
+    <div class="stats"><span><b>${M.length}</b> titles</span><span><b>${dl}</b> download links</span><span><b>${flat(m => [m.release_year]).length}</b> release years</span></div></div>
+    ${adInContent}
+    <section class="sec"><div class="wrap"><div class="sh"><h2>Latest releases</h2><a href="#/movies">See all</a></div><div class="grid">${M.slice(0, 15).map(card).join('')}</div></div></section>
+    ${row('Trending now', trending, '#/movies?sort=downloads')}${row('Top rated', top, '#/movies?sort=rating')}
+    ${G.map(g => row(esc(g), M.filter(m => (m.genres || []).includes(g)).slice(0, 14), '#/movies?genre=' + encodeURIComponent(g))).join('')}${rec.length > 2 ? row('Recently viewed', rec) : ''}`;
+  
+  main.innerHTML = h;
+  
+  // Inject in-content ad
+  if (S.ads['in_content_1'] && S.ads['in_content_1'].is_active) {
+    injectAd('in_content_1', document.getElementById('ad-in-content'));
+  }
+  
+  if (feat.length > 1) {
+    hi = 0; hTimer = setInterval(() => slide(1), 6500);
+    document.querySelectorAll('[data-d]').forEach(d => d.onclick = () => { hi = +d.dataset.d - 1; slide(1); });
+  }
+}
+function slide(n) {
+  const s = document.querySelectorAll('.slide'); if (!s.length) return;
+  hi = (hi + n + s.length) % s.length;
+  s.forEach((x, i) => x.classList.toggle('on', i === hi));
+  document.querySelectorAll('[data-d]').forEach((x, i) => x.classList.toggle('on', i === hi));
+}
+
+// ---------- list ----------
+function list(main, p) {
+  const f = k => p.get(k) || '', genre = f('genre'), year = f('year'), quality = f('quality'), ott = f('ott'), type = f('type'), lang = f('lang'), q = f('q').toLowerCase(), sort = f('sort') || 'latest';
+  let L = S.movies.filter(m =>
+    (!genre || (m.genres || []).includes(genre)) && (!year || String(m.release_year) === year) &&
+    (!quality || links(m).some(l => l.quality === quality)) && (!ott || m.ott_platform === ott) &&
+    (!type || m.type === type) && (!lang || (m.language || []).includes(lang)) &&
+    (!q || (m.title || '').toLowerCase().includes(q) || (m.genres || []).some(g => g.toLowerCase().includes(q))));
+  if (sort === 'rating') L.sort((a, b) => (b.imdb_rating || 0) - (a.imdb_rating || 0));
+  else if (sort === 'downloads') L.sort((a, b) => (b.download_count || 0) - (a.download_count || 0));
+  else if (sort === 'year') L.sort((a, b) => (b.release_year || 0) - (a.release_year || 0));
+  const pages = Math.max(1, Math.ceil(L.length / S.per)), pg = Math.min(Math.max(+f('page') || 1, 1), pages);
+  const tn = (TYPES.find(t => t[0] === type) || [])[1];
+  const title = q ? 'Results for “' + f('q') + '”' : tn || genre || year || quality || ott || lang || 'All titles';
+  setSeo(title + ' — ' + $('lg').textContent);
+  const opt = (arr, cur, label) => `<option value="">${label}</option>` + arr.map(v => `<option value="${esc(v)}" ${String(cur) === String(v) ? 'selected' : ''}>${esc(v)}</option>`).join('');
+  
+  let adList = '';
+  if (S.ads['in_content_1'] && S.ads['in_content_1'].is_active) {
+    adList = `<div class="ad-container" id="ad-list-content"></div>`;
+  }
+
+  main.innerHTML = `<div class="wrap"><div class="ph"><h1>${esc(title)}</h1><p>${L.length} title${L.length === 1 ? '' : 's'} found</p></div>
+    <div class="fb">
+      <select onchange="flt('genre',this.value)">${opt(flat(m => m.genres || []).sort(), genre, 'All genres')}</select>
+      <select onchange="flt('year',this.value)">${opt(flat(m => [m.release_year]).sort((a, b) => b - a), year, 'All years')}</select>
+      <select onchange="flt('quality',this.value)">${opt(flat(m => links(m).map(l => l.quality)).filter(x => x !== 'default').sort((a, b) => qr(a) - qr(b)), quality, 'All qualities')}</select>
+      <select onchange="flt('lang',this.value)">${opt(flat(m => m.language || []).sort(), lang, 'All languages')}</select>
+      <select onchange="flt('type',this.value)"><option value="">All categories</option>${TYPES.map(t => `<option value="${t[0]}" ${type === t[0] ? 'selected' : ''}>${t[1]}</option>`).join('')}</select>
+      <select onchange="flt('sort',this.value)">${[['latest', 'Latest'], ['rating', 'Top rated'], ['downloads', 'Most downloaded'], ['year', 'Newest year']].map(o => `<option value="${o[0]}" ${sort === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>
+    </div>
+    ${adList}
+    ${L.length ? `<div class="grid">${L.slice((pg - 1) * S.per, pg * S.per).map(card).join('')}</div>` : '<div class="empty"><h3>No titles match</h3><p>Remove a filter or try a different search.</p></div>'}
+    ${pages > 1 ? `<div class="pg">${Array.from({ length: pages }, (_, i) => i + 1).filter(n => n === 1 || n === pages || Math.abs(n - pg) <= 2).map(n => `<button class="${n === pg ? 'on' : ''}" onclick="flt('page',${n})">${n}</button>`).join('')}</div>` : ''}</div>`;
+  
+  if (S.ads['in_content_1'] && S.ads['in_content_1'].is_active) {
+    injectAd('in_content_1', document.getElementById('ad-list-content'));
+  }
+}
+function flt(k, v) { const { p } = parse(); v ? p.set(k, v) : p.delete(k); if (k !== 'page') p.delete('page'); location.hash = '#/movies?' + p.toString(); }
+
+// ---------- detail ----------
+function detail(main, slug) {
+  const m = S.movies.find(x => x.slug === slug);
+  if (!m) { main.innerHTML = '<div class="empty"><h3>Title not found</h3><p><a href="#/" style="color:var(--teal)">Go to the home page</a></p></div>'; return; }
+  addRecent(m.id);
+  setSeo('Download ' + m.title + (m.release_year ? ' (' + m.release_year + ')' : '') + ' — ' + $('lg').textContent, (m.description || '').slice(0, 155));
+  const L = links(m), groups = {};
+  L.forEach(l => (groups[l.quality || 'default'] = groups[l.quality || 'default'] || []).push(l));
+  const similar = S.movies.filter(x => x.id !== m.id && (x.genres || []).some(g => (m.genres || []).includes(g))).slice(0, 12);
+  const url = encodeURIComponent(location.href), txt = encodeURIComponent('Download ' + m.title);
+  const info = (k, v) => v ? `<div><span>${k}</span><span>${esc(v)}</span></div>` : '';
+  
+  // Sidebar Ad
+  let sidebarAd = '';
+  if (S.ads['sidebar_top'] && S.ads['sidebar_top'].is_active) {
+    sidebarAd = `<div class="ad-container ad-sidebar" id="ad-sidebar"></div>`;
+  }
+  
+  // Below Download Ad
+  let belowDlAd = '';
+  if (S.ads['detail_below_download'] && S.ads['detail_below_download'].is_active) {
+    belowDlAd = `<div class="ad-container" id="ad-below-dl"></div>`;
+  }
+
+  main.innerHTML = `<div class="wrap"><div class="crumb"><a href="#/">Home</a> / <a href="#/movies">Titles</a> / ${esc(m.title)}</div>
+    <div class="dh"><div class="bg" style="background-image:url('${esc(m.backdrop_url || m.poster_url || '')}')"></div>
+      <div class="dp"><div class="th">${esc(m.title)}${m.poster_url ? `<img src="${esc(m.poster_url)}" alt="${esc(m.title)}" onerror="this.remove()">` : ''}</div></div>
+      <div class="di"><div class="meta">${m.imdb_rating ? `<span class="pill t">★ ${m.imdb_rating}</span>` : ''}${m.release_year ? `<span class="pill">${m.release_year}</span>` : ''}${(m.genres || []).slice(0, 4).map(g => `<span class="pill g">${esc(g)}</span>`).join('')}</div>
+      <h1>${esc(m.title)}</h1>${m.description ? `<p>${esc(m.description)}</p>` : ''}
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-gold" href="#dl" onclick="event.preventDefault();$('dl').scrollIntoView({behavior:'smooth'})">Download now</a><button class="btn btn-line" onclick="toggleWl('${m.id}');this.textContent=wl().includes('${m.id}')?'❤️ Saved':'🤍 Save to watchlist'">${wl().includes(m.id) ? '❤️ Saved' : '🤍 Save to watchlist'}</button></div></div></div>
+    <div class="lay"><div id="dl">
+      <h2 style="font-size:26px">Download links</h2>
+      ${L.length ? Object.keys(groups).map(q => `<div class="qh">${esc(q === 'default' ? 'Download' : q)}<em>${groups[q].length} file${groups[q].length > 1 ? 's' : ''}</em></div>` +
+        groups[q].map(l => `<div class="dl"><div class="dt">${esc(l.source_name || (m.title + ' ' + (l.quality || '') + (l.file_size ? ' [' + l.file_size + ']' : '')))}
+          <div class="dm">${l.quality && l.quality !== 'default' ? `<span class="pill g">${esc(l.quality)}</span>` : ''}${l.file_size ? `<span class="pill">${esc(l.file_size)}</span>` : ''}</div></div>
+          <a class="btn btn-gold" href="${esc(l.download_url)}" target="_blank" rel="noopener nofollow">Download now</a></div>`).join('')).join('')
+        : '<div class="empty"><h3>No links yet</h3><p>Download links for this title will be added soon.</p></div>'}
+      ${L.length ? '<div class="how"><b>How to download:</b> tap Download now, wait for the file host to open, then choose your server. If a link is down, try another quality and check back later.</div>' : ''}
+      ${belowDlAd}
+      <div class="qh">Share this title</div><div class="share"><a class="btn btn-line" target="_blank" rel="noopener" href="https://wa.me/?text=${txt}%20${url}">WhatsApp</a><a class="btn btn-line" target="_blank" rel="noopener" href="https://t.me/share/url?url=${url}&text=${txt}">Telegram</a><button class="btn btn-line" onclick="navigator.clipboard&&navigator.clipboard.writeText(location.href).then(()=>toast('Link copied'))">Copy link</button></div>
+      ${m.trailer_url ? `<div class="qh">Trailer</div><a class="btn btn-line" href="${esc(m.trailer_url)}" target="_blank" rel="noopener">Watch trailer</a>` : ''}
+    </div>
+    <aside class="side">${sidebarAd}<h3 style="margin-bottom:6px">About this title</h3>${info('Year', m.release_year)}${info('Duration', m.duration ? m.duration + ' min' : '')}${info('IMDb', m.imdb_rating)}${info('Language', (m.language || []).join(', '))}${info('Platform', m.ott_platform)}${info('Category', m.type)}${info('Files', L.length ? L.length + ' links' : '')}</aside></div></div>
+    ${row('You may also like', similar)}`;
+  
+  // Inject detail ads
+  if (S.ads['sidebar_top'] && S.ads['sidebar_top'].is_active) {
+    injectAd('sidebar_top', document.getElementById('ad-sidebar'));
+  }
+  if (S.ads['detail_below_download'] && S.ads['detail_below_download'].is_active) {
+    injectAd('detail_below_download', document.getElementById('ad-below-dl'));
+  }
+}
+
+function watch(main) {
+  const L = wl().map(id => S.movies.find(m => m.id === id)).filter(Boolean);
+  setSeo('My watchlist — ' + $('lg').textContent);
+  main.innerHTML = `<div class="wrap"><div class="ph"><h1>My watchlist</h1><p>${L.length} saved. Saved on this device only.</p></div>${L.length ? `<div class="grid">${L.map(card).join('')}</div>` : '<div class="empty"><h3>Nothing saved yet</h3><p>Tap the heart on any title to keep it here.</p></div>'}</div>`;
+}
+function page(main, k) {
+  const T = { about: ['About', 'We list movies, series and anime with download links in multiple qualities, updated daily.'], disclaimer: ['Disclaimer', 'We do not host any files. All links point to third-party sources. If you own content listed here and want it removed, contact us.'], privacy: ['Privacy', 'We store only your watchlist and recently viewed titles in your own browser. We collect no personal data.'], contact: ['Contact', 'For removal requests or broken links, email us at contact@example.com.'] }[k] || ['Page', ''];
+  setSeo(T[0] + ' — ' + $('lg').textContent);
+  main.innerHTML = `<div class="wrap"><div class="ph"><h1>${T[0]}</h1><p style="max-width:680px;margin-top:12px;line-height:1.8">${T[1]}</p></div></div>`;
+}
+
+// ---------- search + ui ----------
+const qi = $('q'), sg = $('sug');
+qi.addEventListener('input', () => {
+  const v = qi.value.trim().toLowerCase();
+  if (v.length < 2) { sg.style.display = 'none'; return; }
+  const r = S.movies.filter(m => (m.title || '').toLowerCase().includes(v)).slice(0, 6);
+  sg.innerHTML = r.length ? r.map(m => `<a href="#/movie/${encodeURIComponent(m.slug)}"><img src="${esc(m.poster_url || '')}" alt="" onerror="this.style.visibility='hidden'"><span>${esc(m.title)}<br><small>${m.release_year || ''} ${esc(m.type || '')}</small></span></a>`).join('') : '<a><span><small>No match. Press Enter to search everything.</small></span></a>';
+  sg.style.display = 'block';
+});
+qi.addEventListener('keydown', e => { if (e.key === 'Enter' && qi.value.trim()) { location.hash = '#/movies?q=' + encodeURIComponent(qi.value.trim()); sg.style.display = 'none'; qi.blur(); } if (e.key === 'Escape') sg.style.display = 'none'; });
+document.addEventListener('click', e => { if (!e.target.closest('.srch')) sg.style.display = 'none'; else if (e.target.closest('#sug a')) { sg.style.display = 'none'; qi.value = ''; } });
+$('ham').onclick = () => $('mob').classList.toggle('open');
+window.addEventListener('scroll', () => { $('up').style.display = scrollY > 600 ? 'block' : 'none'; }, { passive: true });
+$('up').onclick = () => scrollTo({ top: 0, behavior: 'smooth' });
+boot();
+</script>
+</body>
+</html>
